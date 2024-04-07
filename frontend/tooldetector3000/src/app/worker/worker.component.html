@@ -1,1 +1,16 @@
-<p>worker works!</p>
+<div class="container">
+    <label for="file-upload" class="custom-file-upload">
+        Upload Image
+        <input id="file-upload" type="file" (change)="onFileSelected($event)" accept="image/*">
+    </label>
+
+    <div *ngIf="classificationResult">
+        <h2>Classification Result</h2>
+        <p>{{classificationResult}}</p>
+
+        <h2>Certainty Level</h2>
+        <p>{{certaintyLevel}}</p>
+    </div>
+
+    <img *ngIf="selectedImage" [src]="selectedImage" alt="Selected Image" width="300">
+</div>
