@@ -1,0 +1,11 @@
+# Load images from each folder into separate DataFrames and store them in a dictionary
+dataframes = {}
+for folder, label in folder_to_label.items():
+    df = load_images_from_folder(os.path.join(base_path, folder), label)
+    dataframes[folder] = df
+
+# Now you have four DataFrames accessible as:
+df_wrench = dataframes["Wrench"]
+df_screwdriver = dataframes["Screwdriver"]
+df_hammer = dataframes["Hammer"]
+df_combwrench = dataframes["CombWrench"]
