@@ -144,7 +144,10 @@ for folder, label in folders.items():
 # Define the shape of the image (e.g., 28x28 for MNIST)
 image_shape = (512, 512)
 
-# display_first_5_images(df, image_shape)
+display_first_5_images(data["Wrench"], image_shape)
+display_first_5_images(data["Screwdriver"], image_shape)
+display_first_5_images(data["Hammer"], image_shape)
+display_first_5_images(data["CombWrench"], image_shape)
 
 # Loop per key-value pair in all_data
 save_batches_to_csv(data, batch_size=50, directory='Batches')

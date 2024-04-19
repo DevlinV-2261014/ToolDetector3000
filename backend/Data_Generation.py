@@ -7,10 +7,9 @@ def save_augmented_images(source_directory, target_directory, augment_count=5):
         rotation_range=180,
         # width_shift_range=0.2,
         # height_shift_range=0.2,
-        shear_range=0.2,
-        zoom_range=0.2,
-        horizontal_flip=True,
-        fill_mode='nearest'
+        # shear_range=0.2,
+        # zoom_range=0.2,
+        horizontal_flip=True
     )
 
     # Create target directory if it doesn't exist
@@ -45,4 +44,4 @@ folder_to_label = {
 for folder in folder_to_label:
     source_dir = 'Data/Real' + "/" + folder
     target_dir = source_dir + "_Augmentation"
-    save_augmented_images(source_dir, target_dir, augment_count=10)
+    save_augmented_images(source_dir, target_dir, augment_count=20)
