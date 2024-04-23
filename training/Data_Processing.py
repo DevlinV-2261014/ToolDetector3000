@@ -37,7 +37,7 @@ def save_batches_to_csv(data, batch_size, directory):
             batch_df = df[i * batch_size:(i + 1) * batch_size]
             batch_df.to_csv(f"Data/{directory}/{key}/batch_{i + 1}.csv", index=False)
 
-def load_images_from_folder(folder, numeric_label, size=(512, 512)):
+def load_images_from_folder(folder, numeric_label, size=(256, 256)):
     """ Load images from a directory, convert them to grayscale, resize them to 512x512, and return a DataFrame with numeric labels and flattened image data. """
     data = []
     count = 0
@@ -142,7 +142,7 @@ for folder, label in folders.items():
     data[folder] =  df
 
 # Define the shape of the image (e.g., 28x28 for MNIST)
-image_shape = (512, 512)
+image_shape = (256, 256) #Origional was 512, 512
 
 display_first_5_images(data["Wrench"], image_shape)
 display_first_5_images(data["Screwdriver"], image_shape)
