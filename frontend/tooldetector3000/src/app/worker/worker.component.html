@@ -4,12 +4,15 @@
         <input id="file-upload" type="file" (change)="onFileSelected($event)" accept="image/*">
     </label>
 
-    <div *ngIf="classificationResult">
-        <h2>Classification Result</h2>
-        <p>{{classificationResult}}</p>
-
-        <h2>Certainty Level</h2>
-        <p>{{certaintyLevel}}</p>
+    <div id="resultdiv" *ngIf="classificationResult">
+        <div class="resultstat">
+            <h2>Classification Result</h2>
+            <p>{{classificationResult}}</p>
+        </div> 
+        <div class="resultstat">
+            <h2>Certainty Level</h2>
+            <p>{{certaintyLevel}}</p>
+        </div> 
     </div>
 
     <img *ngIf="selectedImage" [src]="selectedImage" alt="Selected Image" width="300">

@@ -7,6 +7,7 @@ import { AuthorsComponent } from './authors/authors.component';
 import { DemonstratorComponent } from './demonstrator/demonstrator.component';
 import { DecisionsComponent } from './decisions/decisions.component';
 import { WorkerComponent } from './worker/worker.component';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { WorkerComponent } from './worker/worker.component';
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]

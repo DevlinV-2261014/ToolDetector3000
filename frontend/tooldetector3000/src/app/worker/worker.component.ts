@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-worker',
@@ -9,6 +10,9 @@ export class WorkerComponent {
   classificationResult: string = '';
   certaintyLevel: number = 0;
   selectedImage: any;
+  selectedBase64: string = '';
+
+  constructor(private http: HttpClient) { }
 
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
@@ -16,12 +20,16 @@ export class WorkerComponent {
     if (file) {
       const reader = new FileReader();
       reader.onload = (e: any) => {
-        this.selectedImage = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
+        this.selectedImage = e.target.result as string;
+        this.selectedBase64 = this.selectedImage.split(',')[1];
 
-    // TODO: Call image classification service here
-    // The service should update the classificationResult and certaintyLevel properties
+        // Send the image to the backend for classification and fill in the result
+        this.http.post('http://localhost:9000/predict', { image: this.selectedBase64 }).subscribe((response: any) => {
+          this.classificationResult = response.prediction.class;
+          this.certaintyLevel = response.prediction.confidence;
+        });
+      };
+      reader.readAsDataURL(file); 
+    }
   }
 }

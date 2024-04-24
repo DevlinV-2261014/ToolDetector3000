@@ -6,10 +6,16 @@
 .container h1,
 .container h2 {
     margin: 20px 0;
+    font-family: calibri;
+    font-weight: bold;
+    color: #ffffff;
 }
 
 .container p {
     margin: 10px 0;
+    font-family: calibri;
+    font-weight: bold;
+    color: #ffffff;
 }
 
 .container img {
@@ -36,4 +42,18 @@
 
 .custom-file-upload input[type='file'] {
     display: none;
+}
+
+.resultstat {
+    margin: 20px;
+    background-color: #0091ff;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+#resultdiv {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
 }
