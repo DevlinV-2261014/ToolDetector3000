@@ -24,7 +24,7 @@ app.add_middleware(
 )
 
 image_shape = [212,212]
-classes = ["Wrench", "CombWrench", "Hammer", "Screwdriver"]
+classes = ["Combwrench", "Hammer", "Screwdriver", "Wrench"]
 
 
 MODEL = load_model("tool_classifier_model.keras")
