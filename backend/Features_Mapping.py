@@ -1,5 +1,6 @@
 import keras
 import tensorflow as tf
+from keras import Model, Input
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
@@ -9,35 +10,29 @@ from keras.regularizers import l2
 import numpy as np
 import os
 import shutil
+from keras import datasets, layers, models
+import matplotlib.pyplot as plt
 
 from keras.src.callbacks import ModelCheckpoint
 from keras.src.optimizers import SGD
+from keras_preprocessing.image import load_img, img_to_array
+from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 
-
 class_names = ['CombWrench', 'Hammer', 'Screwdriver', 'Wrench']
-
-class PrintLearningRate(keras.callbacks.Callback):
-    def on_epoch_begin(self, epoch, logs=None):
-        # Fetch the current learning rate from model's optimizer
-        lr = self.model.optimizer.learning_rate
-        # If using a learning rate schedule, it might be necessary to calculate the learning rate
-        if isinstance(lr, keras.optimizers.schedules.LearningRateSchedule):
-            lr = lr(self.model.optimizer.iterations)
-        print(f"Learning rate for epoch {epoch + 1} is {lr:.6f}")
 
 # Functions
 def augment(image, label):
     # Random flips
-    image = tf.image.random_flip_left_right(image)
-    image = tf.image.random_flip_up_down(image)
+    # image = tf.image.random_flip_left_right(image)
+    # image = tf.image.random_flip_up_down(image)
 
     # Random rotation
     image = tf.image.rot90(image, k=tf.random.uniform(shape=[], minval=0, maxval=4, dtype=tf.int32))
 
     # Random brightness and contrast
     image = tf.image.random_brightness(image, max_delta=0.2)
-    # image = tf.image.random_contrast(image, lower=0.8, upper=1.2)
+    #image = tf.image.random_contrast(image, lower=0.8, upper=1.2)
 
     # Random saturation and hue
     # image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
@@ -89,7 +84,7 @@ def data_process(base_dir, train_dir, val_dir):
 
     # Process each class
     total_size = 8000
-    validation_size = int(total_size * 0.1 / 4)  # 50% of the data for validation
+    validation_size = int(total_size * 0.1 / 4)  # 10% of the data for validation
     for cls in classes:
         # Create directories for each class within train and validation folders
         class_train_dir = os.path.join(train_dir, cls)
@@ -105,6 +100,9 @@ def data_process(base_dir, train_dir, val_dir):
 
         # Split the files into training and validation sets
         train_files, val_files = train_test_split(files, test_size=validation_size)  # Ensures 5 in validation
+
+        # split more for faster training
+        # train_files, _ = train_test_split(train_files, test_size=0.5)
 
         # Move files to their new directories
         for f in train_files:
@@ -159,14 +157,15 @@ base_dir = 'Data/All'
 train_dir = os.path.join(base_dir, 'train')
 val_dir = os.path.join(base_dir, 'validation')
 
-image_shape = [212,212]
-image_size = (212, 212)
+x = 64
+y = 64
+image_shape = [x,y]
+image_size = (x, y)
 
 # train_dataset, validation_dataset = data_process(base_dir, train_dir, val_dir)
 
 # Right after this, save the class names
 # class_names = train_dataset.class_names
-
 
 # Apply the preprocessing function
 # train_dataset = train_dataset.map(preprocess_image)
@@ -178,41 +177,51 @@ image_size = (212, 212)
 initial_learning_rate = 0.01
 lr_schedule = keras.optimizers.schedules.ExponentialDecay(
     initial_learning_rate=initial_learning_rate,
-    decay_steps=400,  # Adjusted to decay approximately every 4 epochs
-    decay_rate=0.9,
+    decay_steps=432,  # Adjusted to decay approximately every 4 epochs
+    decay_rate=0.85,
     staircase=True
 )
 # optimizer = keras.optimizers.Adam(learning_rate=lr_schedule)
-optimizer = keras.optimizers.Adam(learning_rate=0.001)
+optimizer = keras.optimizers.Adam(learning_rate=0.01)
 # optimizer = SGD(learning_rate=lr_schedule, momentum=0.9)
 
 # Define the model
 # Define the CNN model
-model = Sequential([
-    Conv2D(16, (3, 3), activation='relu', padding='same', input_shape=(212, 212, 3)),
-    BatchNormalization(),
-    MaxPooling2D(2, 2),
-    Conv2D(8, (3, 3), activation='relu', padding='same'),
-    BatchNormalization(),
-    MaxPooling2D(2, 2),
-    Flatten(),
-    Dense(128, activation='relu', kernel_regularizer=l2(0.01)),
-    BatchNormalization(),
-    Dropout(0.3),
-    Dense(4, activation='softmax', kernel_regularizer=l2(0.01))
-])
+# Define the input tensor
+input_tensor = Input(shape=(x, y, 3), name='input_layer')
 
-model.compile(optimizer=optimizer,
-              loss='categorical_crossentropy',
-              metrics=['accuracy'])
+x = Conv2D(32, (3, 3), activation='relu', padding='same', name='conv1')(input_tensor)
+# x = BatchNormalization(name='batch_norm1')(x)
+x = MaxPooling2D(2, 2, name='max_pool1')(x)
+conv1_out = x  # Save the output of the first conv layer
+
+x = Conv2D(64, (3, 3), activation='relu', padding='same', name='conv2')(x)
+# x = BatchNormalization(name='batch_norm2')(x)
+x = MaxPooling2D(2, 2, name='max_pool2')(x)
+conv2_out = x  # Save the output of the second conv layer
+
+x = Conv2D(64, (3, 3), activation='relu', padding='same', name='conv3')(x)
+# x = BatchNormalization(name='batch_norm3')(x)
+x = MaxPooling2D(2, 2, name='max_pool3')(x)
+conv3_out = x  # Save the output of the third conv layer
+
+x = Flatten(name='flatten')(x)
+x = Dense(64, activation='relu', name='dense1')(x)
+# x = BatchNormalization(name='batch_norm4')(x)
+# x = Dropout(0.1, name='dropout')(x)
+final_output = Dense(4, activation='softmax', name='output')(x)
+
+# Create the model with multiple outputs
+model = Model(inputs=input_tensor, outputs=[final_output, conv3_out])
+
+# model.compile(optimizer=optimizer,loss={'output': 'categorical_crossentropy','max_pool3': None},metrics={'output': ['accuracy']})
+model.compile(optimizer='adam',loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),metrics=['accuracy'])
 
 
 # Early stopping and model checkpointing
 early_stopping = EarlyStopping(monitor='val_loss', patience=10, verbose=1, mode='min')
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, min_lr=0.00001)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.9, patience=3, min_lr=0.0001)
 model_checkpoint = ModelCheckpoint('best_model.keras', monitor='val_loss', save_best_only=True, verbose=1)
-# Create an instance of the custom callback
-print_lr_callback = PrintLearningRate()
 
 # Create training loops
 loops = 1
@@ -220,7 +229,7 @@ new_training = True
 for i in range(loops):
     print("Loop: ", i + 1)
     train_dataset, validation_dataset = data_process(base_dir, train_dir, val_dir)
-    train_dataset, validation_dataset = data_preprocess(train_dataset, validation_dataset, aug=True)
+    train_dataset, validation_dataset = data_preprocess(train_dataset, validation_dataset, aug=False)
     # Load the best model if it exists
     if not new_training:
         try:
@@ -228,9 +237,47 @@ for i in range(loops):
             print("Loaded best model from previous iteration.")
         except:
             print("Starting training without pre-loaded model weights.")
-    history = model.fit(train_dataset, validation_data=validation_dataset, epochs=20, callbacks=[early_stopping, reduce_lr, model_checkpoint])
-    # history = model.fit(train_dataset, validation_data=validation_dataset, epochs=10, callbacks=[early_stopping, model_checkpoint, print_lr_callback])
+    # history = model.fit(train_dataset.map(lambda x, y: (x, (y, y))),validation_data=validation_dataset.map(lambda x, y: (x, (y, y))),epochs=20,# callbacks=[early_stopping, reduce_lr, model_checkpoint]
+    #)
+    history = model.fit(train_dataset, validation_data=validation_dataset, epochs=20,
+                        # callbacks=[early_stopping, reduce_lr, model_checkpoint]
+                        )
     new_training = False
 
 # Save the trained model
-model.save('tool_classifier_model.keras')
+# model.save('tool_classifier_model.keras')
+
+exit()
+
+# Load and preprocess the image as before
+img = load_img('Data/Real/CombWrench/aug_0_55.jpeg', target_size=(x, y))
+img_array = img_to_array(img)
+img_array = np.expand_dims(img_array, axis=0)  # Make it into a batch of one
+img_processed = preprocess_image(img_array, None)[0]  # Use your preprocess function without the label
+
+# Predict using the model
+final_pred, conv_activations = model.predict(img_processed)
+
+# Assuming conv_activations is an array from your model's layer output with shape [1, height, width, num_filters]
+num_filters = conv_activations.shape[-1]  # Get the number of filters in the activations
+filters_to_display = min(64, num_filters)  # Limit to display only up to 64 filters
+
+rows = 2  # Adjust to have 8 rows
+cols = 4  # Since you want exactly 8 columns
+
+fig, axes = plt.subplots(rows, cols, figsize=(20, 20))  # Adjust size accordingly
+axes = axes.flatten()  # Flatten the 2D array of axes to make it easier to iterate over
+
+for i in range(rows * cols):
+    if i < filters_to_display:
+        # Plot the activation of the ith filter
+        ax = axes[i]
+        ax.imshow(conv_activations[0, :, :, i], cmap='viridis')
+        ax.axis('off')  # Turn off the axis
+        ax.set_title(f'Filter {i + 1}', fontsize=9)
+    else:
+        # Turn off any unused subplots
+        axes[i].axis('off')
+
+plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)  # Adjust spacing to prevent label overlap
+plt.show()

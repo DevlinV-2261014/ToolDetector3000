@@ -24,7 +24,7 @@ class PrintLearningRate(keras.callbacks.Callback):
         # If using a learning rate schedule, it might be necessary to calculate the learning rate
         if isinstance(lr, keras.optimizers.schedules.LearningRateSchedule):
             lr = lr(self.model.optimizer.iterations)
-        print(f"Learning rate for epoch {epoch + 1} is {lr:.6f}")
+        print(f"Learning rate for epoch {epoch + 1} is {lr.numpy():.6f}")
 
 # Functions
 def augment(image, label):
@@ -40,8 +40,8 @@ def augment(image, label):
     # image = tf.image.random_contrast(image, lower=0.8, upper=1.2)
 
     # Random saturation and hue
-    # image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
-    # image = tf.image.random_hue(image, max_delta=0.2)
+    image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
+    image = tf.image.random_hue(image, max_delta=0.2)
 
     # Ensure the pixel values are still in [0, 1]
     image = tf.clip_by_value(image, 0.0, 1.0)
@@ -73,7 +73,7 @@ def configure_for_performance(ds):
     ds = ds.prefetch(buffer_size=tf.data.AUTOTUNE)
     return ds
 
-def data_process(base_dir, train_dir, val_dir):
+def data_process_no_pre(base_dir, train_dir, val_dir):
     # Clean up previous data folders if they exist
     if os.path.exists(train_dir):
         shutil.rmtree(train_dir)
@@ -88,7 +88,7 @@ def data_process(base_dir, train_dir, val_dir):
     classes = ['CombWrench', 'Hammer', 'Screwdriver', 'Wrench']
 
     # Process each class
-    total_size = 8000
+    total_size = 4000
     validation_size = int(total_size * 0.1 / 4)  # 50% of the data for validation
     for cls in classes:
         # Create directories for each class within train and validation folders
@@ -128,6 +128,82 @@ def data_process(base_dir, train_dir, val_dir):
 
     return train_dataset, validation_dataset
 
+def data_process_pre(base_dir, train_dir, val_dir):
+    # Clean up previous training folder if it exists
+    if os.path.exists(train_dir):
+        shutil.rmtree(train_dir)
+
+    # Create fresh training directory
+    os.makedirs(train_dir, exist_ok=True)
+
+    # Check if validation directory exists
+    validation_exists = os.path.exists(val_dir)
+    if not validation_exists:
+        os.makedirs(val_dir, exist_ok=True)
+
+    # List of classes
+    classes = ['CombWrench', 'Hammer', 'Screwdriver', 'Wrench']
+
+    # Process each class
+    total_size = 4000
+    validation_size = int(total_size * 0.1 / 4)  # 10% of the total data per class for validation
+    for cls in classes:
+        # Create directories for each class within the training folder
+        class_train_dir = os.path.join(train_dir, cls)
+        os.makedirs(class_train_dir, exist_ok=True)
+
+        # If validation directory does not exist, prepare it
+        if not validation_exists:
+            class_val_dir = os.path.join(val_dir, cls)
+            os.makedirs(class_val_dir, exist_ok=True)
+
+        # Source directory for the class
+        class_dir = os.path.join(base_dir, cls)
+
+        # Get a list of all files in the class directory
+        files = [os.path.join(class_dir, f) for f in os.listdir(class_dir) if os.path.isfile(os.path.join(class_dir, f))]
+
+        # If validation directory doesn't exist, split and prepare new validation set
+        if not validation_exists:
+            # Split the files into training and validation sets
+            train_files, val_files = train_test_split(files, test_size=validation_size, shuffle=True)  # Ensures a portion in validation
+        else:
+            # Use all available files for training since validation set is preserved
+            train_files = files
+
+        # Move files to their new directories
+        for f in train_files:
+            shutil.copy(f, class_train_dir)
+        if not validation_exists:
+            for f in val_files:
+                shutil.copy(f, class_val_dir)
+
+    # Create a dataset
+    train_dataset = tf.keras.preprocessing.image_dataset_from_directory(
+        train_dir,
+        image_size=image_size,
+        batch_size=40,
+        label_mode='categorical'
+    )
+
+    if not validation_exists:
+        validation_dataset = tf.keras.preprocessing.image_dataset_from_directory(
+            val_dir,
+            image_size=image_size,
+            batch_size=40,
+            label_mode='categorical'
+        )
+    else:
+        # Load existing validation dataset
+        validation_dataset = tf.keras.preprocessing.image_dataset_from_directory(
+            val_dir,
+            image_size=image_size,
+            batch_size=40,
+            label_mode='categorical'
+        )
+
+    return train_dataset, validation_dataset
+
 def data_preprocess(train_dataset, validation_dataset, aug=False):
     # Apply the preprocessing and augmentation functions
     if aug:
@@ -154,73 +230,65 @@ def data_preprocess(train_dataset, validation_dataset, aug=False):
 
 
 # Base directory where your classes are stored
-base_dir = 'Data/All'
+base_dir = 'Data/Synthetic'
 # Prepare the directory structure for training and validation sets
 train_dir = os.path.join(base_dir, 'train')
 val_dir = os.path.join(base_dir, 'validation')
 
-image_shape = [212,212]
-image_size = (212, 212)
-
-# train_dataset, validation_dataset = data_process(base_dir, train_dir, val_dir)
-
-# Right after this, save the class names
-# class_names = train_dataset.class_names
-
-
-# Apply the preprocessing function
-# train_dataset = train_dataset.map(preprocess_image)
-# validation_dataset = validation_dataset.map(preprocess_image)
-
-# train_dataset, validation_dataset = data_preprocess(train_dataset, validation_dataset)
+x = 64
+y = 64
+image_shape = [x,y]
+image_size = (x, y)
 
 # Adjusted learning rate schedule
-initial_learning_rate = 0.01
+initial_learning_rate = 0.001
 lr_schedule = keras.optimizers.schedules.ExponentialDecay(
     initial_learning_rate=initial_learning_rate,
-    decay_steps=400,  # Adjusted to decay approximately every 4 epochs
+    decay_steps=880,  # Adjusted to decay approximately every 3 epochs
     decay_rate=0.9,
     staircase=True
 )
 # optimizer = keras.optimizers.Adam(learning_rate=lr_schedule)
 optimizer = keras.optimizers.Adam(learning_rate=0.001)
-# optimizer = SGD(learning_rate=lr_schedule, momentum=0.9)
+# optimizer = SGD(learning_rate=0.001, momentum=0.9)
 
 # Define the model
 # Define the CNN model
 model = Sequential([
-    Conv2D(16, (3, 3), activation='relu', padding='same', input_shape=(212, 212, 3)),
-    BatchNormalization(),
+    Conv2D(32, (3, 3), activation='relu', input_shape=(x, y, 3)),
     MaxPooling2D(2, 2),
-    Conv2D(8, (3, 3), activation='relu', padding='same'),
-    BatchNormalization(),
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D(2, 2),
+    Conv2D(64, (3, 3), activation='relu'),
     MaxPooling2D(2, 2),
     Flatten(),
-    Dense(128, activation='relu', kernel_regularizer=l2(0.01)),
-    BatchNormalization(),
-    Dropout(0.3),
-    Dense(4, activation='softmax', kernel_regularizer=l2(0.01))
+    Dense(64, activation='relu'),
+    Dense(4, activation='softmax')
 ])
 
+# model.compile(optimizer=optimizer,loss='categorical_crossentropy',metrics=['accuracy'])
 model.compile(optimizer=optimizer,
-              loss='categorical_crossentropy',
+              loss=keras.losses.CategoricalCrossentropy(from_logits=False),
               metrics=['accuracy'])
-
 
 # Early stopping and model checkpointing
 early_stopping = EarlyStopping(monitor='val_loss', patience=10, verbose=1, mode='min')
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, min_lr=0.00001)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.9, patience=3, min_lr=0.00001)
 model_checkpoint = ModelCheckpoint('best_model.keras', monitor='val_loss', save_best_only=True, verbose=1)
 # Create an instance of the custom callback
 print_lr_callback = PrintLearningRate()
 
 # Create training loops
+
+# For synthetic data, load the real model
+
+
 loops = 1
 new_training = True
 for i in range(loops):
     print("Loop: ", i + 1)
-    train_dataset, validation_dataset = data_process(base_dir, train_dir, val_dir)
-    train_dataset, validation_dataset = data_preprocess(train_dataset, validation_dataset, aug=True)
+    train_dataset, validation_dataset = data_process_pre(base_dir, train_dir, val_dir)
+    train_dataset, validation_dataset = data_preprocess(train_dataset, validation_dataset, aug=False)
     # Load the best model if it exists
     if not new_training:
         try:
@@ -228,7 +296,7 @@ for i in range(loops):
             print("Loaded best model from previous iteration.")
         except:
             print("Starting training without pre-loaded model weights.")
-    history = model.fit(train_dataset, validation_data=validation_dataset, epochs=20, callbacks=[early_stopping, reduce_lr, model_checkpoint])
+    history = model.fit(train_dataset, validation_data=validation_dataset, epochs=30, callbacks=[model_checkpoint, reduce_lr])
     # history = model.fit(train_dataset, validation_data=validation_dataset, epochs=10, callbacks=[early_stopping, model_checkpoint, print_lr_callback])
     new_training = False
 

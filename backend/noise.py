@@ -20,6 +20,9 @@ def estimate_noise_level(image, useEstimateSigma):
 
 tools = ['CombWrench', 'Hammer', 'Screwdriver', 'Wrench'] #The tools
 folder_path = 'Data/Real/' #The folder path
+c_path = 'Data/Synthetic_no_noise/' #The copy path
+noise_rate= 1.6
+copy = False
 
 # Just some print that has some info
 for tool in tools: # For every tool
@@ -27,7 +30,10 @@ for tool in tools: # For every tool
     # List all files in the folder
     image_files = os.listdir(current_path)
 
-    count = 0 # We need this to calculate the average noise level
+    c1 = 0 # We need this to calculate the average noise level
+    c2 = 0
+
+    copy_path = c_path + tool #The copy path
 
     # Iterate over each image file
     for filename in image_files:
@@ -41,8 +47,17 @@ for tool in tools: # For every tool
 
         # Estimate noise level
         noise_level = estimate_noise_level(resized_down, True) # Base it off the function
-        count = count + noise_level
-       
-        #print("Noise level of", filename, ":", noise_level)
+        c1 += noise_level
 
-    print("Average noise level for", tool, ":" , round(count / len(image_files), 3))
+        if noise_level > noise_rate:
+            c2 += 1
+            if copy:
+                # copy the picture to the no noise directory
+                if not os.path.exists(copy_path):
+                    os.makedirs(copy_path)
+                cv2.imwrite(f'{copy_path}/{filename}', image)
+       
+        # print("Noise level of", filename, ":", noise_level)
+
+    print("Average noise level for", tool, ":" , round(c1 / len(image_files), 3))
+    print(f"Number of images with noise level > {noise_rate} for", tool, ":", c2)
