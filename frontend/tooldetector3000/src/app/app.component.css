@@ -16,3 +16,12 @@
     font-weight: bold;
     vertical-align: middle;
 }
+
+.flex-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.half-width {
+    width: 50%;
+}
