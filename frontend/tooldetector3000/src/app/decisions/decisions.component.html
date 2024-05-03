@@ -1,1 +1,26 @@
-<p>decisions works!</p>
+<div class="content-container">
+    <h1 class="headtitle">Tool Classifier Model Information</h1>
+        <h2 class="title">Dataset</h2>
+        <p class="text">The dataset used for training the classifier consists of images of tools. The tools are categorized into four classes: 'CombWrench', 'Hammer', 'Screwdriver', and 'Wrench'. The images are processed and augmented to increase the size of the dataset and to introduce variability, which helps in improving the model's ability to generalize.</p>
+
+        <h2 class="title">Model Architecture</h2>
+        <p class="text">The Convolutional Neural Network (CNN) model used here consists of three convolutional layers, each followed by a max pooling layer. The convolutional layers are designed to extract features from the images, while the max pooling layers reduce the spatial dimensions, thus reducing the computational complexity. The model ends with a fully connected layer with 64 neurons and a softmax layer for multi-class classification.</p>
+
+        <h2 class="title">Data Preprocessing and Augmentation</h2>
+        <p class="text">The pre-processing steps include resizing the images to a uniform size of 64x64 pixels, normalizing the pixel values by dividing by 255, and applying random flips and rotations for data augmentation. The images are also adjusted for brightness randomly. These techniques increase the size and variability of the dataset, helping the model generalize better to unseen data.</p>
+
+        <h2 class="title">Data Distribution</h2>
+        <p class="text">The distribution of data for training and validation is handled by the train_test_split function from the sklearn library. The split is done in such a way that 10% of the total data per class is used for validation. This ensures that the model is tested on unseen data, which gives a better estimate of its performance.</p>
+
+        <h2 class="title">Model Parameters and Hyperparameters</h2>
+        <p class="text">The performance of the model is influenced by a number of parameters and hyperparameters. These include the architecture of the convolutional layers and dense neural layers, the learning rate, the batch size, and the number of epochs for training. There is no hard truth in determining the optimal values for these parameters. It involves a lot of testing and experimentation. We have conducted extensive testing with these parameters, adjusting them iteratively to optimize the model's performance. This process helps improve the model's accuracy and prevent issues such as overfitting or underfitting.</p>
+
+        <h2 class="title">Learning Rate Adjustment</h2>
+        <p class="text">The learning rate is initially set to 0.001 and is reduced by a factor of 0.9 every 880 steps (approximately every 3 epochs) using an Exponential Decay schedule. This helps in fine-tuning the model as the training progresses.</p>
+
+        <h2 class="title">Model Training</h2>
+        <p class="text">The model is trained for 30 epochs, and the model weights that give the lowest validation loss are saved. This is done using the ModelCheckpoint callback. The learning rate is also reduced when the validation loss stops improving, using the ReduceLROnPlateau callback.</p>
+
+        <h2 class="title">Model Saving</h2>
+        <p class="text">The model is saved after training, and can be loaded for further training or for making predictions.</p>
+</div>
