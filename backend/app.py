@@ -24,7 +24,7 @@ app.add_middleware(
 )
 
 image_shape = [212,212]
-classes = ["Combwrench", "Hammer", "Screwdriver", "Wrench"]
+classes =  ['CombWrench', 'Hammer', 'Screwdriver', 'Wrench']
 
 
 MODEL = load_model("tool_classifier_model.keras")
@@ -45,7 +45,7 @@ async def predict(image: User_Input):
     if image_pil.mode != 'RGB':
         image_pil = image_pil.convert('RGB')
     # Resize the image
-    resized_image = image_pil.resize((212, 212))
+    resized_image = image_pil.resize((64, 64))
     # Put the image in a numpy array
     resized_image_array = np.array(resized_image)
     # Normalize the image pixels
