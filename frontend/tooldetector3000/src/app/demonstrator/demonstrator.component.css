@@ -47,7 +47,7 @@
     align-items: center;
 }
 
-img {
+.toolIcon {
     width: 150px;
     height: 150px;
     margin: 10px;
