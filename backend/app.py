@@ -23,7 +23,6 @@ app.add_middleware(
     allow_headers=["X-Requested-With", "Content-Type"],
 )
 
-image_shape = [212,212]
 classes =  ['CombWrench', 'Hammer', 'Screwdriver', 'Wrench']
 
 
@@ -45,7 +44,7 @@ async def predict(image: User_Input):
     if image_pil.mode != 'RGB':
         image_pil = image_pil.convert('RGB')
     # Resize the image
-    resized_image = image_pil.resize((64, 64))
+    resized_image = image_pil.resize((64, 64), Image.NEAREST)
     # Put the image in a numpy array
     resized_image_array = np.array(resized_image)
     # Normalize the image pixels
@@ -72,5 +71,13 @@ async def predict(image: User_Input):
         "class": max_class,
         "confidence": f"{max:.5f}"
     }
+    img_byte_array = io.BytesIO()
+    resized_image.save(img_byte_array, format='jpeg')
+    img_byte_array = img_byte_array.getvalue()
 
+    # Convert bytes to base64 encoded string
+    img_base64 = base64.b64encode(img_byte_array).decode('utf-8')
+    stats["reshaped_image"] = {
+        "image": img_base64
+    }
     return stats

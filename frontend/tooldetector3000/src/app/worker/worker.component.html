@@ -14,6 +14,14 @@
             <p>{{certaintyLevel}}</p>
         </div> 
     </div>
-
-    <img *ngIf="selectedImage" [src]="selectedImage" alt="Selected Image" width="300">
+    <div *ngIf="selectedImage" class="imagerow">
+        <div class="imagecol">
+            <h3 class="imagetitle">Input image</h3>
+            <img  [src]="selectedImage" alt="Selected Image" width="300">
+        </div>
+        <div *ngIf="resizedImage" class="imagecol">
+            <h3 class="imagetitle">Reshaped image</h3>
+            <img [src]="resizedImage" ald="Resized Image" width="300">
+        </div>
+    </div>
 </div>
