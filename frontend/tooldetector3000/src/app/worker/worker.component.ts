@@ -11,6 +11,7 @@ export class WorkerComponent {
   certaintyLevel: number = 0;
   selectedImage: any;
   selectedBase64: string = '';
+  resizedImage: any;
 
   constructor(private http: HttpClient) { }
 
@@ -27,6 +28,7 @@ export class WorkerComponent {
         this.http.post('http://localhost:9000/predict', { image: this.selectedBase64 }).subscribe((response: any) => {
           this.classificationResult = response.prediction.class;
           this.certaintyLevel = response.prediction.confidence;
+          this.resizedImage = `data:image/jpeg;base64,${response.reshaped_image.image as string}`;
         });
       };
       reader.readAsDataURL(file); 

@@ -1,9 +1,9 @@
 from PIL import Image
 import matplotlib.pyplot as plt
-img = Image.open('Data/Real/CombWrench/aug_0_55.jpeg')
+img = Image.open('Data/Real/Screwdriver/IMG_0520.jpeg')
 # Function to display an image
 # Reshape the image
-reshaped_img = img.resize((32, 32))  # Resize the image to 200x200 pixels
+reshaped_img = img.resize((64, 64))  # Resize the image to 200x200 pixels
 
 # Display images side by side
 plt.figure(figsize=(10, 5))  # Adjust the figure size as needed
