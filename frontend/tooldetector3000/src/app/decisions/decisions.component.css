@@ -19,9 +19,18 @@
     color: #000000;
 }
 
-.text {
+.text, li {
     font-size: 17px;
     font-family: calibri;
     color: #000000;
     width: auto;
+}
+
+ul {
+    margin-left: 40px;
+}
+
+.list {
+    display: inline-block;
+    font-weight: bolder;
 }
